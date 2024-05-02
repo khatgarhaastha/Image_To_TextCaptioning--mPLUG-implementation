@@ -1,0 +1,6 @@
+instaloader
+torch 
+torchvision 
+torchaudio 
+transformers
+tqdm

@@ -25,4 +25,4 @@ This is a Complete E2E app that will allow the users to upload their Instagram p
 - Install Dependencies 
 
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-pip install instaloader 
+pip install instaloader

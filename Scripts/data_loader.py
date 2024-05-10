@@ -34,8 +34,8 @@ class CaptionDataset(Dataset):
 def test():
 
     # Example usage
-    img_dir = 'Data/'
-    csv_file = 'Data/captions_csv.csv'
+    img_dir = 'Data/instagram_data/'
+    csv_file = 'Data/instagram_data/captions_csv.csv'
 
     transform = transforms.Compose([
         transforms.Resize((224, 224)),

@@ -5,29 +5,36 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 from sklearn.model_selection import train_test_split
-import torch 
-from transformers import ResNetModel, ResNetConfig
-
 class CaptionDataset(Dataset):
-    def __init__(self, csv_file, img_dir, tokenizer,transform=None):
+    def __init__(self, csv_file, img_dir, tokenizer, transform=None):
         self.data = csv_file
         self.img_dir = img_dir
         self.transform = transform
         self.tokenizer = tokenizer
+    
     def __len__(self):
         return len(self.data)
-
+    
     def __getitem__(self, idx):
+        # Get image path and load image
         img_path = os.path.join(self.img_dir, self.data.iloc[idx, 1] + '.jpg')
         image = Image.open(img_path).convert('RGB')
         if self.transform:
             image = self.transform(image)
-
+        
+        # Tokenize the caption and obtain attention mask
         caption = self.data.iloc[idx, 2]
-        caption = self.tokenizer.encode(caption, max_length=512, padding='max_length', truncation=True, return_tensors='pt')
-        caption = caption.squeeze(0)
+        tokenized_caption = self.tokenizer.encode_plus(
+            caption,
+            max_length=512,
+            padding='max_length',
+            truncation=True,
+            return_tensors='pt'
+        )
+        caption_ids = tokenized_caption['input_ids'].squeeze(0)  # Tensor of token ids
+        attention_mask = tokenized_caption['attention_mask'].squeeze(0)  # Tensor of attention masks
 
-        return image, caption
+        return image, caption_ids, attention_mask
 
 
 

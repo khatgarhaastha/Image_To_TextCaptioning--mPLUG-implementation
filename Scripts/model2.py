@@ -8,9 +8,13 @@ from PIL import Image
 from tqdm import tqdm
 
 def load_model_and_tokenizer(model_name):
+    # model is the encoder-decoder model
     model = VisionEncoderDecoderModel.from_pretrained(model_name)
+    # processor is used to process the images
     processor = ViTImageProcessor.from_pretrained(model_name)
+    # tokenizer is used to process the captions
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+
     return model, processor, tokenizer
 
 def setup_device():
@@ -21,9 +25,13 @@ def predict_captions(model, processor, tokenizer, device, image_paths, max_lengt
     model.to(device)
     model.eval()
     images = [Image.open(img).convert("RGB") for img in image_paths]
-    pixel_values = processor(images=images, return_tensors="pt").pixel_values.to(device)
+    # get the pixel values for the images
+    pixel_values = processor(images=images, return_tensors="pt").pixel_values.to(device) 
+    # generate the captions
     output_ids = model.generate(pixel_values, max_length=max_length, num_beams=num_beams)
+    # decode the output ids to text
     captions = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+    # remove leading and trailing whitespaces
     return [caption.strip() for caption in captions]
 
 def train_one_epoch(model, data_loader, criterion, optimizer, device):

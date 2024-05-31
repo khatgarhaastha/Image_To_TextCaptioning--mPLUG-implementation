@@ -102,14 +102,14 @@ def main():
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-    train_loader, val_loader, test_loader = create_dataloaders('Data/instagram_data/captions_csv.csv', 'Data/instagram_data', transform=transform, batch_size=1, tokenizer=tokenizer)
+    train_loader, val_loader, test_loader = create_dataloaders('Data/captions_csv.csv', 'Data/', transform=transform, batch_size=1, tokenizer=tokenizer)
 
-    # for epoch in range(1):
-    #     train_loss, val_loss = train(model, train_loader, val_loader, device, criterion, optimizer)
-    #     print(f'Epoch: {epoch}, Train Loss: {train_loss}, Val Loss: {val_loss}')
+    for epoch in range(1):
+        train_loss, val_loss = train(model, train_loader, val_loader, device, criterion, optimizer)
+        print(f'Epoch: {epoch}, Train Loss: {train_loss}, Val Loss: {val_loss}')
 
-    # test_loss = test(model, test_loader, device, criterion)
-    # print(f'Test Loss: {test_loss}')
+    test_loss = test(model, test_loader, device, criterion)
+    print(f'Test Loss: {test_loss}')
 
     # Generate Captions 
     for idx, (images, caption_ids, attention_ids) in enumerate(test_loader):

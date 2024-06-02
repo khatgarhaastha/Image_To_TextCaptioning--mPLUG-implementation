@@ -118,7 +118,7 @@ def main():
     # Hyperparameters
     batch_size = 1
     learning_rate = 0.001
-    epochs = 10
+    epochs = 4
     embed_dim = 768
     num_heads = 4
     skip_layer_numbers = 3

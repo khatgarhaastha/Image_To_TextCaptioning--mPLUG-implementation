@@ -58,7 +58,7 @@ def create_dataloaders(csv_path, img_dir, transform, batch_size, tokenizer, test
     data = data[data.iloc[:, 2].notnull()]
 
     # for testing 
-    #data = data[:11]
+    data = data[:2000]
     train_data, test_data = train_test_split(data, test_size=test_size, random_state=42)
     train_data, val_data = train_test_split(train_data, test_size=val_size / (1 - test_size), random_state=42)
 

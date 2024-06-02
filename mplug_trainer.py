@@ -47,7 +47,7 @@ def train(model, data_loader, val_loader, device, criterion, optimizer, print_ev
     val_loss = 0.0
 
     with tqdm(total=len(val_loader)) as pbar:
-        for idx, (images, caption_ids, attention_ids) in (enumerate(val_loader)):
+        for idx, (images, caption_ids, attention_ids, target_ids) in (enumerate(val_loader)):
             images = images.to(device)
             caption_ids = caption_ids.to(device)
             attention_ids = attention_ids.to(device)
@@ -56,9 +56,9 @@ def train(model, data_loader, val_loader, device, criterion, optimizer, print_ev
 
             caption_ids = caption_ids.permute(1,0,2)
             
-            output = model(images, caption_ids, attention_ids)
+            output = model(images, caption_ids)
 
-            loss = criterion(output.view(-1, output.size(-1)), caption_ids.view(-1))
+            loss = criterion(output.view(-1, 30522), target_ids.view(-1))
             val_loss += loss.item()
 
             pbar.set_postfix({'val_loss': val_loss / len(val_loader)})
@@ -72,7 +72,7 @@ def test(model, data_loader, device, criterion):
     test_loss = 0.0
 
     with tqdm(total=len(data_loader)) as pbar:
-        for idx, (images, caption_ids, attention_ids) in tqdm(enumerate(data_loader)):
+        for idx, (images, caption_ids, attention_ids, target_ids) in tqdm(enumerate(data_loader)):
             images = images.to(device)
             caption_ids = caption_ids.to(device)
             attention_ids = attention_ids.to(device)
@@ -81,9 +81,9 @@ def test(model, data_loader, device, criterion):
             images = images.permute(1,0,2)
 
             caption_ids = caption_ids.permute(1,0,2)
-            output = model(images, caption_ids, attention_ids)
+            output = model(images, caption_ids)
 
-            loss = criterion(output.view(-1, output.size(-1)), caption_ids.view(-1))
+            loss = criterion(output.view(-1, 30522), target_ids.view(-1))
             test_loss += loss.item()
             
             pbar.set_postfix({'test_loss': test_loss / len(data_loader)})
@@ -95,6 +95,9 @@ def test(model, data_loader, device, criterion):
 def create_dataloaders(csv_path, img_dir, transform, batch_size, text_tokenizer,image_processor, image_encoder, text_encoder, test_size=0.2, val_size=0.1 ):
     data = pd.read_csv(csv_path)
     data = data[data.iloc[:, 2].notnull()]
+
+    # for testing purposes
+    #data = data[:11]
 
     train_data, test_data = train_test_split(data, test_size=test_size, random_state=42)
     train_data, val_data = train_test_split(train_data, test_size=val_size / (1 - test_size), random_state=42)
@@ -114,7 +117,7 @@ def main():
     # Hyperparameters
     batch_size = 1
     learning_rate = 3e-4
-    epochs = 5
+    epochs = 10
     embed_dim = 768
     num_heads = 4
     skip_layer_numbers = 3
@@ -163,6 +166,10 @@ def main():
         test_loss = test(model, test_dataloader, device, criterion)
 
         print(f'Epoch: {epoch}, Train Loss: {train_loss}, Val Loss: {val_loss}, Test Loss: {test_loss}')
+
+        wandb.log({"Train Loss": train_loss, "Val Loss": val_loss, "Test Loss": test_loss})
+        # Save Model
+        torch.save(model.state_dict(), f'Saved_models/MPLUG/model_{epoch}.pth')
 
 if __name__ == '__main__':
     main()

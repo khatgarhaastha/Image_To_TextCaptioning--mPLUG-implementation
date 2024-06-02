@@ -37,30 +37,39 @@ def predict_captions(model, processor, tokenizer, device, image_paths, max_lengt
 def train_one_epoch(model, data_loader, criterion, optimizer, device):
     model.train()
     total_loss = 0
-    for idx, batch in tqdm(enumerate(data_loader)):
-        inputs, targets = batch['image'].to(device), batch['input_ids'].to(device)
+    with tqdm(total=len(data_loader)) as pbar:
+        for idx, batch in (enumerate(data_loader)):
+            inputs, targets = batch['image'].to(device), batch['input_ids'].to(device)
 
-        optimizer.zero_grad()
-        outputs = model(pixel_values=inputs, labels=targets).logits.squeeze(0)
-        targets = targets.squeeze(0)
+            optimizer.zero_grad()
+            outputs = model(pixel_values=inputs, labels=targets).logits.squeeze(0)
+            targets = targets.squeeze(0)
 
-        outputs = torch.permute(outputs, (0, 2, 1))
-        loss = criterion(outputs, targets)
-        
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item()
+            outputs = torch.permute(outputs, (0, 2, 1))
+            loss = criterion(outputs, targets)
+            
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+            pbar.set_postfix({'train_loss': total_loss / (idx+1)})
+            pbar.update(1)
+
     
     return total_loss / len(data_loader)
 
-def validate(model, data_loader, criterion, device):
+def validate(model, data_loader, criterion, device, isVal= True):
     model.eval()
     total_loss = 0
+    postFix = 'val_loss' if isVal else 'test_loss'
     with torch.no_grad():
-        for batch in data_loader:
-            inputs, targets = batch['pixel_values'].to(device), batch['labels'].to(device)
-            outputs = model(input_ids=inputs, labels=targets).loss
-            loss = criterion(outputs, targets)
-            total_loss += loss.item()
-
+        with tqdm(total=len(data_loader)) as pbar:
+            for batch in data_loader:
+                inputs, targets = batch['image'].to(device), batch['input_ids'].to(device)
+                outputs = model(pixel_values=inputs, labels=targets).logits.squeeze(0)
+                targets = targets.squeeze(0)
+                outputs = torch.permute(outputs, (0, 2, 1))
+                loss = criterion(outputs, targets)
+                total_loss += loss.item()
+                pbar.set_postfix({postFix: total_loss / len(data_loader)})
+                pbar.update(1)
     return total_loss / len(data_loader)

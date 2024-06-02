@@ -16,17 +16,23 @@ class Model(torch.nn.Module):
         self.text_encoder = BertModel.from_pretrained('bert-base-uncased')
         self.transformer = torch.nn.Transformer(d_model=hidden_size, nhead=nhead, num_encoder_layers=num_layers, num_decoder_layers=num_layers, dim_feedforward=dim_feedforward, dropout=dropout)
         self.output_projection = torch.nn.Linear(hidden_size, vocab_size)
-
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     def forward(self, images, captions):
-        print(images.shape)
-        print(captions.shape)
-        
         #image_features = self.Image_encoder(images).last_hidden_state
-        image_features = self.image_processor(images, return_tensors="pt", do_rescaling=False)
-        image_features = self.image_encoder(image_features.pixel_values).last_hidden_state
+
+        image_features = self.image_processor(images, return_tensors="pt").to(self.device)
+        image_features = self.image_encoder(image_features.pixel_values).logits
         caption_embeddings = self.text_encoder(captions)[0]
         image_features = self.image_linear(image_features)
         caption_embeddings = self.text_linear(caption_embeddings)
+
+        # Reshape image features 
+        image_features = image_features.unsqueeze(0)
+        image_features = image_features.permute(1, 0, 2)
+
+        # Reshape caption embeddings
+        caption_embeddings = caption_embeddings.permute(1, 0, 2)
+
 
         tgt_mask = self.transformer.generate_square_subsequent_mask(captions.size(-1)).to(captions.device)
         transformer_output = self.transformer(src=image_features, tgt=caption_embeddings, tgt_mask=tgt_mask)

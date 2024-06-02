@@ -102,7 +102,7 @@ def main():
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-    train_loader, val_loader, test_loader = create_dataloaders('Data/captions_csv.csv', 'Data/', transform=transform, batch_size=1, tokenizer=tokenizer)
+    train_loader, val_loader, test_loader = create_dataloaders('Data/instagram_data/captions_csv.csv', 'Data/instagram_data/', transform=transform, batch_size=1, tokenizer=tokenizer)
 
     for epoch in range(1):
         train_loss, val_loss = train(model, train_loader, val_loader, device, criterion, optimizer)

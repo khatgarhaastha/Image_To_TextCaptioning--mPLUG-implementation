@@ -10,8 +10,8 @@ import wandb
 
 def main():
     # Path setup
-    csv_file = 'Data/captions_csv.csv'
-    img_dir = 'Data/'
+    csv_file = 'Data/instagram_data/captions_csv.csv'
+    img_dir = 'Data/instagram_data/'
     
     # Model and Tokenizer setup
     model_name = "nlpconnect/vit-gpt2-image-captioning"

@@ -23,6 +23,7 @@ def train(model, data_loader, val_loader, device, criterion, optimizer, print_ev
             images = images.to(device)
             caption_ids = captions_ids.to(device)
             attention_ids = attention_ids.to(device)
+            target_ids = target_ids.to(device)
 
             images = images.permute(1,0,2)
 
@@ -51,7 +52,7 @@ def train(model, data_loader, val_loader, device, criterion, optimizer, print_ev
             images = images.to(device)
             caption_ids = caption_ids.to(device)
             attention_ids = attention_ids.to(device)
-
+            target_ids = target_ids.to(device)
             images = images.permute(1,0,2)
 
             caption_ids = caption_ids.permute(1,0,2)
@@ -76,7 +77,7 @@ def test(model, data_loader, device, criterion):
             images = images.to(device)
             caption_ids = caption_ids.to(device)
             attention_ids = attention_ids.to(device)
-
+            target_ids = target_ids.to(device)
             # permute images 31,1,1000 -> 1,32,1000
             images = images.permute(1,0,2)
 
@@ -116,7 +117,7 @@ def create_dataloaders(csv_path, img_dir, transform, batch_size, text_tokenizer,
 def main():
     # Hyperparameters
     batch_size = 1
-    learning_rate = 3e-4
+    learning_rate = 0.001
     epochs = 10
     embed_dim = 768
     num_heads = 4
@@ -125,10 +126,11 @@ def main():
     decoder_layers_number = 2
 
     model = MPLUG_Implementation(embed_dim, num_heads, skip_layer_numbers, encoder_layers_number, decoder_layers_number)
+    
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr=learning_rate)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+    model.to(device)
     transform = transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
@@ -145,8 +147,8 @@ def main():
     print(image_encoder)
 
     train_dataloader, val_dataloader, test_dataloader = create_dataloaders(
-        img_dir='Data/',
-        csv_path='Data/captions_csv.csv',
+        img_dir='Data/instagram_data',
+        csv_path='Data/instagram_data/captions_csv.csv',
         text_tokenizer=text_tokenizer,
         transform=transform,
         batch_size=batch_size,

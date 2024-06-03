@@ -38,9 +38,9 @@ class ImageCaptionDataset(Dataset):
         caption = self.caption_frame.iloc[idx, 2]
         # Tokenize captions here:
         tokenized_caption = self.tokenizer.encode(
-            caption,
+            f'{self.tokenizer.cls_token_id} {caption} {self.tokenizer.eos_token_id}',
             add_special_tokens=True,
-            max_length=128,
+            max_length=25,
             padding='max_length',
             truncation=True,
             return_tensors="pt"

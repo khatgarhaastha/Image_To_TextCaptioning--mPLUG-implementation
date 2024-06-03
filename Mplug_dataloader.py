@@ -50,7 +50,7 @@ class CaptionDataset(Dataset):
         caption = self.data.iloc[idx, 2]
         tokenized_caption = self.tokenizer(caption, 
                                            return_tensors='pt',
-                                           max_length=512,
+                                           max_length=25,
                                            truncation=True, 
                                            padding='max_length')
         caption_ids = tokenized_caption['input_ids']

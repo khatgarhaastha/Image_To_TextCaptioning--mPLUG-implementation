@@ -114,6 +114,25 @@ def create_dataloaders(csv_path, img_dir, transform, batch_size, text_tokenizer,
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     return train_loader, val_loader, test_loader
+
+
+def generate_caption(model, images, tokenizer, device, max_length=50):
+    model.eval()
+
+    with torch.no_grad():
+        images = images.to(device)
+        caption_ids = torch.tensor([tokenizer.cls_token_id]).unsqueeze(0).to(device)
+
+        for _ in range(max_length):
+            output = model(images, caption_ids)
+            next_token = torch.argmax(output[0, -1, :])
+            caption_ids = torch.cat([caption_ids, next_token.unsqueeze(0).view(1, 1)], dim=1)
+
+            if next_token == tokenizer.encode(tokenizer.eos_token)[0]:
+                break
+
+    return caption_ids
+
 def main():
     # Hyperparameters
     batch_size = 1
@@ -165,13 +184,30 @@ def main():
     
     for epoch in range(epochs):
         train_loss, val_loss = train(model, train_dataloader, val_dataloader, device, criterion, optimizer)
-        test_loss = test(model, test_dataloader, device, criterion)
-
-        print(f'Epoch: {epoch}, Train Loss: {train_loss}, Val Loss: {val_loss}, Test Loss: {test_loss}')
-
-        wandb.log({"Train Loss": train_loss, "Val Loss": val_loss, "Test Loss": test_loss})
-        # Save Model
+        
+        print(f'Epoch: {epoch}, Train Loss: {train_loss}, Val Loss: {val_loss}')
+        wandb.log({"Train Loss": train_loss, "Val Loss": val_loss})
+        
+        # Save the model
         torch.save(model.state_dict(), f'Saved_models/MPLUG/model_{epoch}.pth')
 
+    test_loss = test(model, test_dataloader, device, criterion)
+    
+    # Log test loss
+    print(f'Test Loss: {test_loss}')
+    wandb.log({"Test Loss": test_loss})
+
+    # Generate Captions 
+    for idx, (images, caption_ids, attention_ids) in enumerate(test_dataloader):
+        
+        generated_caption_ids = generate_caption(model, images, text_tokenizer, device, max_length=50)
+        generated_caption = text_tokenizer.decode(generated_caption_ids.squeeze(0).tolist())
+
+        #Actual Caption
+        caption = text_tokenizer.decode(caption_ids.squeeze(0).tolist())
+        
+        print(f'Actual Caption: {caption}')
+        print(f'Generated Caption: {generated_caption}')
+        print('-----------------------------------')
 if __name__ == '__main__':
     main()

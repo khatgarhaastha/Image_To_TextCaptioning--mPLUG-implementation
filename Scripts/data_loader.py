@@ -25,8 +25,8 @@ class CaptionDataset(Dataset):
         # Tokenize the caption and obtain attention mask
         caption = self.data.iloc[idx, 2]
         tokenized_caption = self.tokenizer.encode_plus(
-            caption,
-            max_length=512,
+            f'{self.tokenizer.cls_token_id} {caption} {self.tokenizer.eos_token_id}',
+            max_length=25,
             padding='max_length',
             truncation=True,
             return_tensors='pt'

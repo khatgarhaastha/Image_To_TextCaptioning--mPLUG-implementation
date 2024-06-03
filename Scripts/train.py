@@ -28,11 +28,8 @@ def train(model, data_loader, val_loader, device, criterion, optimizer, print_ev
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
-            if idx % print_every == 0:
-                print(f'Batch: {idx}, Loss: {loss.item()}')
             
-            pbar.set_postfix({'train_loss': train_loss / len(data_loader)})
+            pbar.set_postfix({'train_loss': train_loss / (idx+1)})
             pbar.update(1)
 
 
@@ -50,9 +47,9 @@ def train(model, data_loader, val_loader, device, criterion, optimizer, print_ev
             loss = criterion(output.view(-1, output.size(-1)), caption_ids.view(-1))
             val_loss += loss.item()
 
-            pbar.set_postfix({'val_loss': val_loss / len(val_loader)})
+            pbar.set_postfix({'val_loss': val_loss / (idx+1)})
             pbar.update(1)
-            
+
     
     return train_loss / len(data_loader), val_loss / len(val_loader)
 
@@ -91,7 +88,7 @@ def generate_caption(model, images, tokenizer, device, max_length=50):
             next_token = torch.argmax(output[0, -1, :])
             caption_ids = torch.cat([caption_ids, next_token.unsqueeze(0).view(1, 1)], dim=1)
 
-            if next_token == tokenizer.encode('[SEP]')[0]:
+            if next_token == tokenizer.encode(tokenizer.eos_token_id)[0]:
                 break
 
     return caption_ids
@@ -100,11 +97,11 @@ def main():
 
     # Hyperparameters
     batch_size = 1
-    learning_rate = 0.00001
-    epochs = 5
+    learning_rate = 0.001
+    epochs = 10
     image_size = 1000
     hidden_size = 768
-    num_layers = 1
+    num_layers = 3
     nhead = 2
     dim_feedforward = 128
     dropout = 0.1
@@ -127,6 +124,7 @@ def main():
 
     train_loader, val_loader, test_loader = create_dataloaders('Data/instagram_data/captions_csv.csv', 'Data/instagram_data/', transform=transform, batch_size=batch_size, tokenizer=tokenizer)
 
+    print([tokenizer.cls_token])
     wandb.init(project='instagram-captionning', config = {"architecture": "Transformer_BASED", "batch_size": batch_size, "learning_rate": learning_rate, "epochs": epochs, "image_size" : image_size, "hidden_size" : hidden_size, "num_layer" : num_layers, "nhead" : nhead, "dim_feedforward" : dim_feedforward, "dropout" : dropout})
     for epoch in range(epochs):
         train_loss, val_loss = train(model, train_loader, val_loader, device, criterion, optimizer)
@@ -139,6 +137,7 @@ def main():
     test_loss = test(model, test_loader, device, criterion)
     print(f'Test Loss: {test_loss}')
 
+    
     # Generate Captions 
     for idx, (images, caption_ids, attention_ids) in enumerate(test_loader):
         

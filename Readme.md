@@ -43,9 +43,9 @@ This project implements an **image captioning pipeline** that generates natural 
 
 ![Architecture Diagram](mPLUG_Architecture.png)
 
-## Pseudo Code for cross model skip connections
+## Pseudo Code for cross-model skip connections
 
-![Pseudo Code](mPLUG_Architecture.png)
+![Pseudo Code](PsudoCode_mPLUG.png)
 
 
 

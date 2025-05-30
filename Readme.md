@@ -41,7 +41,12 @@ This project implements an **image captioning pipeline** that generates natural 
   - This model would take inputs of Text encoder and Image Encoder and try to autoregressively generate the captions based on a cross-model attention-based architecture
 
 
-![Architecture Diagram](path/to/your/image.png)
+![Architecture Diagram](mPLUG_Architecture.png)
+
+## Pseudo Code for cross model skip connections
+
+![Pseudo Code](mPLUG_Architecture.png)
+
 
 
 ## Dataset 
